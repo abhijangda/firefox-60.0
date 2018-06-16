@@ -49,6 +49,7 @@ PollWrapper(GPollFD *ufds, guint nfsd, gint timeout_)
     mozilla::HangMonitor::Suspend();
     gint result;
     {
+        fprintf (stderr, "Polling at %s:%s\n", __FILE__, __FUNCTION__);
         AUTO_PROFILER_THREAD_SLEEP;
         result = (*sPollFunc)(ufds, nfsd, timeout_);
     }

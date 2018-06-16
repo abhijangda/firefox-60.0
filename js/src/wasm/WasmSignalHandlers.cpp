@@ -1378,8 +1378,8 @@ static bool
 HandleFault(int signum, siginfo_t* info, void* ctx)
 {
     // Before anything else, prevent handler recursion.
-    if (sAlreadyInSignalHandler.get())
-        return false;
+    //if (sAlreadyInSignalHandler.get())
+    //    return false;
     AutoSignalHandler ash;
 
     MOZ_RELEASE_ASSERT(signum == SIGSEGV || signum == SIGBUS || signum == kWasmTrapSignal);

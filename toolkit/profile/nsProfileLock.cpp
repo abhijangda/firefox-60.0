@@ -160,7 +160,16 @@ void nsProfileLock::FatalSignalHandler(int signo
     }
 
     if (oldact) {
-        if (oldact->sa_handler == SIG_DFL) {
+       fprintf (stderr, "oldact->sa_sigaction %p (oldact->sa_flags & SA_SIGINFO) %d\n", oldact->sa_sigaction, (oldact->sa_flags & SA_SIGINFO));
+       if (oldact->sa_sigaction &&
+                 (oldact->sa_flags & SA_SIGINFO) == SA_SIGINFO) {
+            oldact->sa_sigaction(signo, info, context);
+        }
+        else if (oldact->sa_handler && oldact->sa_handler != SIG_IGN)
+        {
+            oldact->sa_handler(signo);
+        }
+        else if (oldact->sa_handler == SIG_DFL) {
             // Make sure the default sig handler is executed
             // We need it to get Mozilla to dump core.
             sigaction(signo,oldact, nullptr);
@@ -175,16 +184,6 @@ void nsProfileLock::FatalSignalHandler(int signo
             sigprocmask(SIG_UNBLOCK, &unblock_sigs, nullptr);
 
             raise(signo);
-        }
-#ifdef SA_SIGINFO
-        else if (oldact->sa_sigaction &&
-                 (oldact->sa_flags & SA_SIGINFO) == SA_SIGINFO) {
-            oldact->sa_sigaction(signo, info, context);
-        }
-#endif
-        else if (oldact->sa_handler && oldact->sa_handler != SIG_IGN)
-        {
-            oldact->sa_handler(signo);
         }
     }
 
@@ -372,6 +371,7 @@ nsresult nsProfileLock::LockWithSymlink(nsIFile *aLockFile, bool aHaveFcntlLock)
                 // because mozilla is run via nohup.
                 if (!sDisableSignalHandling) {
                     struct sigaction act, oldact;
+                    fprintf (stderr, "registering FatalSignalHandler %p\n", FatalSignalHandler);
 #ifdef SA_SIGINFO
                     act.sa_sigaction = FatalSignalHandler;
                     act.sa_flags = SA_SIGINFO | SA_ONSTACK;
